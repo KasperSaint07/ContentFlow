@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} — ContentFlow{% endblock %}
+
+{% block content %}
+<article class="article-full">
+    <a href="/" class="back">&larr; Назад к списку</a>
+
+    <h1>{{ article.title }}</h1>
+
+    <div class="article-meta">
+        {% if article.source %}
+            <span class="source">{{ article.source.name }}</span>
+        {% endif %}
+        {% if article.published_at %}
+            <span class="date">{{ article.published_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        {% endif %}
+        <a href="{{ article.url }}" target="_blank" class="original">Оригинал</a>
+    </div>
+
+    <div class="article-content">
+        {{ article.content | replace('\n', '<br>') | safe }}
+    </div>
+</article>
+{% endblock %}
