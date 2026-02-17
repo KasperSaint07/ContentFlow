@@ -15,6 +15,8 @@ HEADERS = {
 }
 TIMEOUT = 15
 DELAY = 1.5
+MAX_LINKS_SCAN = 200
+MAX_ARTICLES_PER_RUN = 50
 
 
 class ZakonScraper(BaseScraper):
@@ -22,7 +24,7 @@ class ZakonScraper(BaseScraper):
         links = self._get_article_links()
         articles = []
 
-        for link in links[:15]:
+        for link in links[:MAX_ARTICLES_PER_RUN]:
             time.sleep(DELAY)
             article = self._parse_article(link)
             if article:
@@ -59,7 +61,7 @@ class ZakonScraper(BaseScraper):
             seen.add(full_url)
             links.append(full_url)
 
-        return links[:30]
+        return links[:MAX_LINKS_SCAN]
 
     def _parse_article(self, url: str) -> ArticleData | None:
         try:
