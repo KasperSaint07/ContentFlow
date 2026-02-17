@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}ContentFlow — Все статьи{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Все статьи</h1>
+    <a href="/" class="btn btn-link">На главную</a>
+</div>
+
+<p class="total">Всего статей: {{ total }}</p>
+
+{% if articles %}
+<div class="articles-list">
+    {% for article in articles %}
+    <div class="article-card">
+        <h2><a href="/article/{{ article.id }}">{{ article.title }}</a></h2>
+        <div class="article-meta">
+            {% if article.source %}
+                <span class="source">{{ article.source.name }}</span>
+            {% endif %}
+            {% if article.published_at %}
+                <span class="date">{{ article.published_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            {% endif %}
+        </div>
+        {% if article.summary %}
+            <p class="summary">{{ article.summary[:200] }}...</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="pagination">
+    {% if has_prev %}
+        <a class="btn btn-link" href="/articles?page={{ prev_page }}&limit={{ limit }}">← Предыдущая</a>
+    {% else %}
+        <span class="btn btn-link disabled">← Предыдущая</span>
+    {% endif %}
+
+    <span class="page-indicator">Страница {{ page }} из {{ total_pages }}</span>
+
+    {% if has_next %}
+        <a class="btn btn-link" href="/articles?page={{ next_page }}&limit={{ limit }}">Следующая →</a>
+    {% else %}
+        <span class="btn btn-link disabled">Следующая →</span>
+    {% endif %}
+</div>
+{% else %}
+<p class="empty">Статей пока нет. Нажмите «Обновить новости» на главной странице.</p>
+{% endif %}
+{% endblock %}

@@ -1,8 +1,9 @@
 import asyncio
 from contextlib import suppress
+from math import ceil
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -60,6 +61,34 @@ def index(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "articles": articles,
         "total": total,
+    })
+
+
+@app.get("/articles")
+def all_articles_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+):
+    _, total = get_list(db, skip=0, limit=1)
+    total_pages = max(1, ceil(total / limit)) if total else 1
+    page = min(page, total_pages)
+
+    skip = (page - 1) * limit
+    articles, _ = get_list(db, skip=skip, limit=limit)
+
+    return templates.TemplateResponse("articles.html", {
+        "request": request,
+        "articles": articles,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages,
+        "has_prev": page > 1,
+        "has_next": page < total_pages,
+        "prev_page": page - 1,
+        "next_page": page + 1,
     })
 
 

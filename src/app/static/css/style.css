@@ -58,6 +58,11 @@ main {
     margin-bottom: 20px;
 }
 
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
 .page-header h1 {
     font-size: 1.6rem;
 }
@@ -82,6 +87,12 @@ main {
     font-size: 0.9rem;
 }
 
+.btn-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
 .btn:hover {
     background: #16213e;
 }
@@ -89,6 +100,11 @@ main {
 .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.btn-link.disabled {
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 .articles-list {
@@ -133,6 +149,19 @@ main {
 .summary {
     color: #555;
     font-size: 0.95rem;
+}
+
+.pagination {
+    margin-top: 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-indicator {
+    color: #666;
+    font-size: 0.92rem;
 }
 
 .article-full {
