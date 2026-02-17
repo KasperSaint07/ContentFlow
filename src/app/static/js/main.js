@@ -8,7 +8,7 @@ if (btn) {
 
         try {
             const response = await fetch("/api/scrape", { method: "POST" });
-            const data = await response.json();
+            await response.json();
 
             if (response.ok) {
                 btn.textContent = "Готово! Обновляем...";

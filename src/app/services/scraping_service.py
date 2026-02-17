@@ -4,7 +4,7 @@ from typing import Type
 from sqlalchemy.orm import Session
 
 from app.models import Article, Source
-from app.scrapers.base import BaseScraper, ArticleData
+from app.scrapers.base import BaseScraper
 
 
 # Словарь: имя источника (как в БД) -> класс парсера
@@ -35,6 +35,7 @@ def run_for_source(db: Session, source_id: int) -> tuple[int, int]:
     try:
         articles_data = scraper.fetch_articles()
     except Exception:
+        db.rollback()
         return 0, 0
 
     created = 0

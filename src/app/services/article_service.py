@@ -1,6 +1,5 @@
 """Сервис статей: достаём из БД список и одну статью."""
 from datetime import date
-from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
@@ -12,9 +11,9 @@ def get_list(
     db: Session,
     skip: int = 0,
     limit: int = 20,
-    source_id: Optional[int] = None,
-    from_date: Optional[date] = None,
-    to_date: Optional[date] = None,
+    source_id: int | None = None,
+    from_date: date | None = None,
+    to_date: date | None = None,
 ) -> tuple[list[Article], int]:
     """
     Вернуть список статей с пагинацией и фильтрами.
@@ -44,7 +43,7 @@ def get_list(
     return articles, total
 
 
-def get_by_id(db: Session, article_id: int) -> Optional[Article]:
+def get_by_id(db: Session, article_id: int) -> Article | None:
     """Вернуть одну статью по id или None, если нет."""
     return (
         db.query(Article)
@@ -52,3 +51,4 @@ def get_by_id(db: Session, article_id: int) -> Optional[Article]:
         .filter(Article.id == article_id)
         .first()
     )
+

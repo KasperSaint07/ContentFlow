@@ -1,15 +1,15 @@
 """Точка входа: сборка приложения FastAPI."""
 from pathlib import Path
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.api.articles import router as articles_router
-from app.api.scrape import router as scrape_router
 from app.api.deps import get_db
-from app.services import article_service
+from app.api.scrape import router as scrape_router
+from app.services.article_service import get_by_id, get_list
 
 # Пути
 APP_DIR = Path(__file__).resolve().parent
@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory=APP_DIR / "templates")
 @app.get("/")
 def index(request: Request, db: Session = Depends(get_db)):
     """Главная страница: список статей."""
-    articles, total = article_service.get_list(db, skip=0, limit=20)
+    articles, total = get_list(db, skip=0, limit=20)
     return templates.TemplateResponse("index.html", {
         "request": request,
         "articles": articles,
@@ -42,9 +42,8 @@ def index(request: Request, db: Session = Depends(get_db)):
 @app.get("/article/{article_id}")
 def article_page(request: Request, article_id: int, db: Session = Depends(get_db)):
     """Страница одной статьи."""
-    article = article_service.get_by_id(db, article_id)
+    article = get_by_id(db, article_id)
     if not article:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Статья не найдена")
     return templates.TemplateResponse("article.html", {
         "request": request,

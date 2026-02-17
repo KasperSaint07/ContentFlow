@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.database import SessionLocal
 from app.models.source import Source
-from app.services import scraping_service
+from app.services.scraping_service import run_all, run_for_source
 
 router = APIRouter(prefix="/scrape", tags=["scrape"])
 
@@ -14,7 +14,7 @@ def _background_scrape_all():
     """Фоновая задача: парсинг всех источников (своя сессия БД)."""
     db = SessionLocal()
     try:
-        scraping_service.run_all(db)
+        run_all(db)
     finally:
         db.close()
 
@@ -23,7 +23,7 @@ def _background_scrape_source(source_id: int):
     """Фоновая задача: парсинг одного источника."""
     db = SessionLocal()
     try:
-        scraping_service.run_for_source(db, source_id)
+        run_for_source(db, source_id)
     finally:
         db.close()
 
