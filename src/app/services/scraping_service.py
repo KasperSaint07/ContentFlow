@@ -12,6 +12,30 @@ SCRAPER_REGISTRY: dict[str, Type[BaseScraper]] = {
 }
 
 
+def _ensure_default_sources(db: Session) -> None:
+    """Create built-in sources for fresh databases (idempotent)."""
+    defaults = [
+        {"name": "Zakon.kz", "base_url": "https://www.zakon.kz"},
+    ]
+
+    created = False
+    for item in defaults:
+        exists = db.query(Source).filter(Source.name == item["name"]).first()
+        if exists:
+            continue
+        db.add(
+            Source(
+                name=item["name"],
+                base_url=item["base_url"],
+                is_active=True,
+            )
+        )
+        created = True
+
+    if created:
+        db.commit()
+
+
 def run_for_source(db: Session, source_id: int) -> tuple[int, int]:
     source = db.query(Source).filter(Source.id == source_id, Source.is_active).first()
     if not source:
@@ -64,6 +88,7 @@ def run_for_source(db: Session, source_id: int) -> tuple[int, int]:
 
 
 def run_all(db: Session) -> dict[int, tuple[int, int]]:
+    _ensure_default_sources(db)
     sources = db.query(Source).filter(Source.is_active).all()
     result = {}
     for source in sources:
