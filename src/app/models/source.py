@@ -1,4 +1,3 @@
-"""Source model: news site we scrape from."""
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func

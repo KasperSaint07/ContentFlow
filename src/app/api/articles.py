@@ -1,4 +1,3 @@
-"""Роутер статей: список и одна статья."""
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -21,7 +20,6 @@ def list_articles(
     from_date: date | None = Query(None),
     to_date: date | None = Query(None),
 ):
-    """Получить список статей с пагинацией и фильтрами."""
     items, total = get_list(
         db,
         skip=skip,
@@ -35,7 +33,6 @@ def list_articles(
 
 @router.get("/{article_id}", response_model=ArticleResponse)
 def get_article(article_id: int, db: Session = Depends(get_db)):
-    """Получить одну статью по id."""
     article = get_by_id(db, article_id)
     if not article:
         raise HTTPException(status_code=404, detail="Статья не найдена")

@@ -1,4 +1,3 @@
-// Кнопка «Обновить новости» — отправляет POST /api/scrape
 const btn = document.getElementById("scrape-btn");
 
 if (btn) {
@@ -12,7 +11,6 @@ if (btn) {
 
             if (response.ok) {
                 btn.textContent = "Готово! Обновляем...";
-                // Через 3 секунды перезагрузить страницу, чтобы появились новые статьи
                 setTimeout(() => location.reload(), 3000);
             } else {
                 btn.textContent = "Ошибка";

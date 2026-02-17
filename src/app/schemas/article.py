@@ -1,4 +1,3 @@
-"""Article schemas."""
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -7,8 +6,6 @@ from app.schemas.source import SourceResponse
 
 
 class ArticleResponse(BaseModel):
-    """Full article for API (single item)."""
-
     id: int
     source_id: int
     title: str
@@ -24,8 +21,6 @@ class ArticleResponse(BaseModel):
 
 
 class ArticleList(BaseModel):
-    """Short article for list views."""
-
     id: int
     source_id: int
     title: str
