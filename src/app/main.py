@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.articles import router as articles_router
@@ -56,11 +57,17 @@ async def shutdown_auto_scrape():
 
 @app.get("/")
 def index(request: Request, db: Session = Depends(get_db)):
-    articles, total = get_list(db, skip=0, limit=20)
+    try:
+        articles, total = get_list(db, skip=0, limit=20)
+        db_unavailable = False
+    except SQLAlchemyError:
+        articles, total = [], 0
+        db_unavailable = True
     return templates.TemplateResponse("index.html", {
         "request": request,
         "articles": articles,
         "total": total,
+        "db_unavailable": db_unavailable,
     })
 
 
@@ -71,12 +78,19 @@ def all_articles_page(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
 ):
-    _, total = get_list(db, skip=0, limit=1)
-    total_pages = max(1, ceil(total / limit)) if total else 1
-    page = min(page, total_pages)
-
-    skip = (page - 1) * limit
-    articles, _ = get_list(db, skip=skip, limit=limit)
+    try:
+        _, total = get_list(db, skip=0, limit=1)
+        total_pages = max(1, ceil(total / limit)) if total else 1
+        page = min(page, total_pages)
+        skip = (page - 1) * limit
+        articles, _ = get_list(db, skip=skip, limit=limit)
+        db_unavailable = False
+    except SQLAlchemyError:
+        total = 0
+        total_pages = 1
+        page = 1
+        articles = []
+        db_unavailable = True
 
     return templates.TemplateResponse("articles.html", {
         "request": request,
@@ -89,12 +103,16 @@ def all_articles_page(
         "has_next": page < total_pages,
         "prev_page": page - 1,
         "next_page": page + 1,
+        "db_unavailable": db_unavailable,
     })
 
 
 @app.get("/article/{article_id}")
 def article_page(request: Request, article_id: int, db: Session = Depends(get_db)):
-    article = get_by_id(db, article_id)
+    try:
+        article = get_by_id(db, article_id)
+    except SQLAlchemyError as exc:
+        raise HTTPException(status_code=503, detail="База данных временно недоступна") from exc
     if not article:
         raise HTTPException(status_code=404, detail="Статья не найдена")
     return templates.TemplateResponse("article.html", {
