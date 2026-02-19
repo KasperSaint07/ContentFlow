@@ -1,4 +1,4 @@
-import time
+import asyncio
 from datetime import datetime
 from urllib.parse import urljoin
 
@@ -17,24 +17,36 @@ TIMEOUT = 15
 DELAY = 1.5
 MAX_LINKS_SCAN = 200
 MAX_ARTICLES_PER_RUN = 50
+MAX_CONCURRENT_REQUESTS = 5
 
 
 class ZakonScraper(BaseScraper):
     def fetch_articles(self) -> list[ArticleData]:
-        links = self._get_article_links()
-        articles = []
+        return asyncio.run(self._fetch_articles_async())
 
-        for link in links[:MAX_ARTICLES_PER_RUN]:
-            time.sleep(DELAY)
-            article = self._parse_article(link)
-            if article:
-                articles.append(article)
+    async def _fetch_articles_async(self) -> list[ArticleData]:
+        async with httpx.AsyncClient(
+            headers=HEADERS,
+            timeout=TIMEOUT,
+            follow_redirects=True,
+        ) as client:
+            links = await self._get_article_links(client)
+            semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+            tasks = [
+                self._parse_article(client, link, semaphore)
+                for link in links[:MAX_ARTICLES_PER_RUN]
+            ]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
+        articles: list[ArticleData] = []
+        for result in results:
+            if isinstance(result, ArticleData):
+                articles.append(result)
         return articles
 
-    def _get_article_links(self) -> list[str]:
+    async def _get_article_links(self, client: httpx.AsyncClient) -> list[str]:
         try:
-            response = httpx.get(NEWS_URL, headers=HEADERS, timeout=TIMEOUT, follow_redirects=True)
+            response = await client.get(NEWS_URL)
             response.raise_for_status()
         except httpx.HTTPError:
             return []
@@ -63,10 +75,17 @@ class ZakonScraper(BaseScraper):
 
         return links[:MAX_LINKS_SCAN]
 
-    def _parse_article(self, url: str) -> ArticleData | None:
+    async def _parse_article(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        semaphore: asyncio.Semaphore,
+    ) -> ArticleData | None:
         try:
-            response = httpx.get(url, headers=HEADERS, timeout=TIMEOUT, follow_redirects=True)
-            response.raise_for_status()
+            async with semaphore:
+                await asyncio.sleep(DELAY)
+                response = await client.get(url)
+                response.raise_for_status()
         except httpx.HTTPError:
             return None
 
